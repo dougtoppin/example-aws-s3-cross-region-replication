@@ -33,7 +33,7 @@ Other than that it is entirely normal.
 
 To get started run the script with a create argument and the name of a bucket to create.
 This will create the replication bucket in another region and suffix the region name to the bucket.
-When that operation has complete the main bucket will be created again with the region name suffixed.
+When that operation has completed the main bucket will be created again with the region name suffixed.
 
 Example:
 
