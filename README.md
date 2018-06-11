@@ -9,7 +9,7 @@ Other regions may be able to access them if allowed but if a regional outage wer
 Note that because S3 buckets have a global namespace it is not possible to have a bucket with the same name in 2 different regions.
 
 Because of this it is useful to name a bucket with a suffix of the region that the bucket was created in.
-Doing that allows you to have uniquely named buckets that differ in name by only the region making the functions accessing the contents easier to write a manage.
+Doing that allows you to have uniquely named buckets that differ in name by only the region making the functions accessing the contents easier to write and manage.
 
 This is an example of using CloudFormation to create both a bucket to store objects in and a bucket to replicate those objects to.
 The CloudFormation stacks will be called ```aws-s3-crr-primary``` and ```aws-s3-crr-dr```.
