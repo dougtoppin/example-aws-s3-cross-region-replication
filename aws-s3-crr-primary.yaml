@@ -1,0 +1,79 @@
+Description: >
+  s3 crr testing
+
+Parameters:
+
+  NAME:
+    Type: String
+
+  REGIONDEST:
+    Type: String
+
+Resources:
+
+  ReplicaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            Service: [s3.amazonaws.com]
+
+  ReplicaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - s3:Get*
+          - s3:ListBucket
+          Resource:
+          - !Sub arn:aws:s3:::${NAME}-${AWS::Region}
+          - !Sub arn:aws:s3:::${NAME}-${AWS::Region}/*
+          Effect: 'Allow'
+        - Action:
+          - s3:ReplicateObject
+          - s3:ReplicateDelete
+          - s3:ReplicateTags
+          - s3:GetObjectVersionTagging
+          Effect: 'Allow'
+          Resource: !Sub arn:aws:s3:::${NAME}-${REGIONDEST}/*
+      PolicyName: ReplicaPolicy
+      Roles: [!Ref 'ReplicaRole']
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${NAME}-${AWS::Region}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      ReplicationConfiguration:
+        Role: !GetAtt [ReplicaRole, Arn]
+        Rules:
+        - Destination:
+            Bucket: !Sub arn:aws:s3:::${NAME}-${REGIONDEST}
+            StorageClass: STANDARD
+          Id: Backup
+          Prefix: ''
+          Status: Enabled
+      VersioningConfiguration:
+        Status: Enabled
+
+Outputs:
+
+  NAME:
+    Description: Full name of bucket created
+    Value: !Sub ${NAME}-${AWS::Region}
+    Export:
+      Name: !Sub ${NAME}-${AWS::Region}
+
+  NAMEREP:
+    Description: Full name of repication bucket
+    Value: !Sub ${NAME}-${REGIONDEST}
+    Export:
+      Name: !Sub ${NAME}-${REGIONDEST}

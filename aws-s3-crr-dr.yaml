@@ -1,0 +1,29 @@
+Description: >
+  Create a simple encrypted S3 bucket and suffix the region to the name
+
+Parameters:
+
+  NAME:
+    Type: String
+
+
+Resources:
+
+  BUCKET:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub ${NAME}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: "Enabled"
+
+Outputs:
+  
+  NAME:
+    Description: Full name of bucket created
+    Value: !Sub ${NAME}
+    Export:
+      Name: !Sub ${NAME}
