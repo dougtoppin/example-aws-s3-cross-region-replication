@@ -86,6 +86,67 @@ creating primary bucket
 }
 ```
 
+An optional third argument can be included which will specify the aws
+profile to have the creates and delete applied to.
+This can be helpful if you need to use different IAM accounts with different privileges.
+The following is an example of including *dummy* as the name of a profile to use.
+
+```
+
+$ ./aws-s3-create-bucket-replicated.sh create testme dummy1
+using aws profile 3
+validating aws-s3-crr-primary.yaml
+{
+    "CapabilitiesReason": "The following resource(s) require capabilities: [AWS::IAM::Role]", 
+    "Description": "s3 crr testing\n", 
+    "Parameters": [
+        {
+            "NoEcho": false, 
+            "ParameterKey": "REGIONDEST"
+        }, 
+        {
+            "NoEcho": false, 
+            "ParameterKey": "NAME"
+        }
+    ], 
+    "Capabilities": [
+        "CAPABILITY_IAM"
+    ]
+}
+
+running cfn-lint
+
+validating aws-s3-crr-dr.yaml
+{
+    "Description": "Create a simple encrypted S3 bucket and suffix the region to the name\n", 
+    "Parameters": [
+        {
+            "NoEcho": false, 
+            "ParameterKey": "NAME"
+        }
+    ]
+}
+
+running cfn-lint
+
+creating replication bucket
+{
+    "StackId": "arn:aws:cloudformation:us-west-1:xxx:stack/aws-s3-crr-dr/2ac4fa70-4142-11e9-b917-06cca9edf6c0"
+}
+checking status
+checking status
+checking status
+checking status
+checking status
+checking status
+checking status
+creating primary bucket
+{
+    "StackId": "arn:aws:cloudformation:us-east-1:xxx:stack/aws-s3-crr-primary/44585f40-4142-11e9-a295-0e639cbb91d4"
+}
+
+```
+
 After the CloudFormation stacks are successfully created any files copied to the source region bucket should automatically appear in the destination region bucket.
 
 The script can also be run with a delete argument and will delete both stacks created which will cause the buckets created to be deleted as well.

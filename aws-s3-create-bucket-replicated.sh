@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# exit on any error
+set -e
+
 # aws-s3-create-bucket-replicated.sh
 
 # This is an example of how to create an AWS s3 bucket that is replicated to another region
@@ -7,14 +11,24 @@
 #set -e
 
 usage() {
-  echo "Usage $0 (create|delete) bucket-name"
+  echo "Usage $0 (create|delete) bucket-name [ aws-profile ]"
 }
 
-if test $# -ne 2
+if test $# -lt 2
 then
     usage
     exit 1
 fi
+
+AWSPROFILE=""
+
+if test $# -eq 3
+then
+	# if a third argument was provided assume it is the aws profile to use for the operations
+	AWSPROFILE=" --profile $3 "
+	echo "using aws profile 3"
+fi
+
 
 # what to do
 ACTION="$1"
@@ -41,8 +55,17 @@ validate() {
   do
 
     echo "validating $i"
-    aws cloudformation validate-template --template-body file://$i
+    aws $AWSPROFILE cloudformation validate-template --template-body file://$i
     echo
+
+	# cfn-lint (pip install cfn-lint) is a very good linter for templates,
+	# if it is available then also run it
+    if [ -x $(which cfn-lint) ]; then
+    	echo "running cfn-lint"
+    	cfn-lint $i
+    else
+    	echo "cfn-lint not found, continuing"
+    fi
 
   done
 
@@ -56,7 +79,7 @@ create() {
   echo "creating replication bucket"
 
   # the destination region bucket must be created first
-  aws cloudformation create-stack --stack-name $STACKREP \
+  aws  $AWSPROFILE cloudformation create-stack --stack-name $STACKREP \
       --template-body file://$STACKREP.yaml \
       --region "$REGIONDEST" \
       --parameters ParameterKey=NAME,ParameterValue="$NAMEDEST"
@@ -75,7 +98,7 @@ create() {
 
   echo "creating primary bucket"
 
-  aws cloudformation create-stack --stack-name $STACKMAIN --template-body file://$STACKMAIN.yaml \
+  aws $AWSPROFILE  cloudformation create-stack --stack-name $STACKMAIN --template-body file://$STACKMAIN.yaml \
       --region $REGIONSRC \
       --capabilities CAPABILITY_NAMED_IAM \
       --parameters ParameterKey=NAME,ParameterValue="$NAME" ParameterKey=REGIONDEST,ParameterValue="$REGIONDEST"
@@ -88,12 +111,12 @@ delete() {
     # user is responsible for ensuring that the buckets to be deleted have already been emptied
 
     echo "deleting stack $STACKMAIN"
-    aws cloudformation delete-stack --stack-name $STACKMAIN --region $REGIONSRC
+    aws $AWSPROFILE cloudformation delete-stack --stack-name $STACKMAIN --region $REGIONSRC
 
     sleep 5
 
     echo "deleting stack $STACKREP"
-    aws cloudformation delete-stack --stack-name $STACKREP --region $REGIONDEST
+    aws $AWSPROFILE cloudformation delete-stack --stack-name $STACKREP --region $REGIONDEST
 
 
 }
